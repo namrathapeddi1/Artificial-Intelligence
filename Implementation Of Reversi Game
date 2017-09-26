@@ -1,615 +1,733 @@
-b = []
-c = []
-d = {}
-e = {}
-l = []
-l1 = ''
-l2 = ''
 import copy
-import re
-import collections
-import itertools
 import sys
-f = open('input3.txt', 'r')
+player = 0
+a = 0
+k = 0
+pass1 = 0
+b = []
+d = []
+b1 = []
+w = [[99,-8,8,6,6,8,-8,99],[-8,-24,-4,-3,-3,-4,-24,-8],[8,-4,7,4,4,7,-4,8],[6,-3,4,0,0,4,-3,6],[6,-3,4,0,0,4,-3,6],[8,-4,7,4,4,7,-4,8],[-8,-24,-4,-3,-3,-4,-24,-8],[99,-8,8,6,6,8,-8,99]]
+f = open('input.txt', 'r')
+player = f.readline().strip()
+dep = f.readline().strip()
 for line in f:
     line = line.rstrip('\n')
-    line = line.strip('')
-    if line != '':
-        b.append(line)
-'''
+    b.append( list(line) )
+
 f  = open("output.txt",'w')
 sys.stdout = f
-'''
-for i in range(len(b)):
-    
-    if b[i] == '******':
-        break
-    c.append(b[i])
 
-b1 = copy.deepcopy(b)
-for j in range(len(b)):
-    b1.remove(b[j])
-    if b[j] == '******':
-        break
 
-p13 = []
-p12 = []
-d2 = {}
-permutationsmemo = {}
-for j1 in range(len(b1)):
-    l1 = ''
-    if len(b1[j1]) == 1:
-        if b1[j1+1] != 'decision':
-            if b1[j1][0:1] != '*':
-                if b1[j1][0:1] != '0':
-                    if b1[j1] != 'decision':
-                        d[b1[j1]] = {'parents' : [], 'children' : [], 'prob' : float(b1[j1+1]), 'prob1' : {}}
-
-        else:
-            p12.append(b1[j1])
-            if b1[j1][0:1] != '*':
-                if b1[j1][0:1] != '0':
-                    if b1[j1] != 'decision':
-                        d[b1[j1]] = {'parents' : [], 'children' : [], 'prob' : 0, 'prob1': {}}
-            
-
+def change(player):
+    if player == 'X':
+        return 'O'
     else:
-        if b1[j1][0:1] != '*':
-            if b1[j1][0:1] != '0':
-                if b1[j1][0:1] != '1':
-                    if b1[j1] != 'decision':
-                        if b1[j1][0:7] != 'utility':
-                            if '|' in b1[j1]:
-                                #print b1[j1]
-                                aj = b1[j1].index('|')
-                                if re.match("[A-Z]",b1[j1][0:aj-1]):
-                                    l2 = b1[j1][aj+2:]
-                                    l2 = l2.split()
-                                    d[b1[j1][0:aj-1]] = {'parents' : l2, 'children' : [], 'prob' : -2, 'prob1' : {}}
-                                    for p0 in l2:
-                                        d[p0]['children'].append(b1[j1][0:aj-1])
+        return 'X'
 
-                                                
-                                            
-                                    for k2 in range(j1+1,len(b1)):
-                                        l1 = ''
-                                        if b1[k2] == '***' or b1[k2] == '******':
-                                            break
-                                                    
-                                        else:
-                                            l1 = b1[k2][4:]
-                                            l1 = tuple(l1.split())
-                                            l1 = tuple(True if x == '+' else False for x in l1)
-                                            if b1[k2][3] == ' ':
-                                                d[b1[j1][0:aj-1]]['prob1'][l1] = float(b1[k2][0:3])
-                                            else:
+current = player
+other = change(current)
 
-                                                d[b1[j1][0:aj-1]]['prob1'][l1] = float(b1[k2][0:4])
-                        
-        elif b1[j1] == '******':
-            o1 = b1[j1+1].index('|')
-            o2 = b1[j1+1][o1+2:]
-            o2 = o2.split()
-            d2['utility'] = {'parents' : o2, 'prob1' :{}}
-            for k31 in range(j1+2,len(b1)):
-                o3 = ''
-                o4 = b1[k31].index(' ')
-                o5 = b1[k31][o4+1:]
-                o5 = tuple(o5.split())
-                o5 = tuple(True if o6 == '+' else False for o6 in o5)
-                o7 = b1[k31][:o4]
-                d2['utility']['prob1'][o5] = float(o7)
-            o10 = d2['utility']['parents']
-
-#print d
-
-d1 = copy.deepcopy(d)
-for ij in d.keys():
-    if ij in p12:
-        del d1[ij]
-
-e = {}
-f1 = []
-def hello(c,p12):
-    c1 = []
-    e11 = []
-    for r in c:
-
-       
-        c1 = []
-        e11 = []
-        f1 = []
-        
-        e = collections.OrderedDict()
-        e1 = collections.OrderedDict()
-        
-        if r[0] == 'P':
-            
-            if '|' in r:
+def evaluation(b, player):
+    xsum = 0
+    osum = 0
+    for i in range(8):
+        for j in range(8):
+            if b[i][j] == 'X':
+                xsum = xsum + int(w[i][j])
                 
-                r3 = r.split('|')
-                l3 = r3[0].index('(')
-                    
-                for r1 in range(l3+1,len(r3[0])):
-                    if re.match("[A-Z]",r3[0][r1]):
-                           
-                        
-                        if r3[0][r1+4] == '+':
-                            e[r3[0][r1]] = True
-                            
-                        else:
-                            e[r3[0][r1]] = False
-                for r2 in range(1,len(r3[1])):
-                    if re.match("[A-Z]",r3[1][r2]):
-                        
-                        if r3[1][r2+4] == '+':
-                            e1[r3[1][r2]] = True
-                        else:
-                            e1[r3[1][r2]] = False
-
+            elif b[i][j] == 'O':
+                osum = osum + int(w[i][j])
             else:
-                l31 = r.index('(')
-                for r11 in range(l31+1,len(r)):
-                    if re.match("[A-Z]",r[r11]):
-                        
-                        if r[r11+4] == '+':
-                            e[r[r11]] = True
-                            
-                        else:
-                            e[r[r11]] = False
-
-            z = collections.OrderedDict()
-            z = e.copy()
-            z.update(e1)
-            j1 = z.keys()
-            j2 = z.values()
-            
-            e5 = copy.deepcopy(e1)
-            for j3 in j1:
-                
-                b1 = j1.index(j3)
-               
-                if j3 not in p12:
-                    del z[j3]
-                    c1.append(elim_ask(j3,z,j2[b1],p12))
-            j4 = e5.keys()
-            j5 = e5.values()
-            for j6 in j4:
-                b2 = j4.index(j6)
-                if j6 not in p12:
-                    del e5[j6]
-                    e11.append(elim_ask(j6,e5,j5[b2],p12))
-            
-                        
-               
-            p = 1
-            for i in c1:
-                p *= i
-            f = 1
-            for i1 in e11:
-                f *= i1
-            
-            f13 = p/f
-            
-            print format(f13, '.2f')
-           
-            
-        
-
-        elif r[0] == 'E':
-            f1 = {}
-            ij1 = []
-            a = []
-            l41 = r.index('(')
-            for ra in range(l41+1,len(r)):
-                if re.match("[A-Z]",r[ra]):
-                    if r[ra+4] == '+':
-                        e1[r[ra]] = True
-                    else:
-                        e1[r[ra]] = False
-            ra3 = len(o10)
-            for k1 in o10:
-                if k1 in p12:
-                    ra3 = ra3 - 1
-                
-            a = list(itertools.product([True,False], repeat=ra3))
-            
-       
-            for ra5 in range(len(a)):
-                
-                c1 = []
-                e11 = []
-                
-                ij1 = []
-                for ra1 in range(len(o10)):
-                    if o10[ra1] not in p12:
-                        
-                        e[o10[ra1]] = bool(a[ra5][ra1])
-                        
-                ij1 = []     
-                z = collections.OrderedDict()
-               
-                z = copy.deepcopy(e)
-                z.update(e1)
-                j1 = z.keys()
-                j2 = z.values()
-                
-                e5 = copy.deepcopy(e1)
-                for j3 in j1:
-                          
-                    b1 = j1.index(j3)
-                    if j3 not in p12:
-                        
-                        del z[j3]
-                        
-                        c1.append(elim_ask(j3,z,j2[b1],p12))                            
-                j4 = e5.keys()
-                j5 = e5.values()
-                for j6 in j4:
-                    b2 = j4.index(j6)
-                    if j6 not in p12:
-                        #print j6
-                        del e5[j6]
-                        e11.append(elim_ask(j6,e5,j5[b2],p12))
-                        
-               
-                p = 1
-                for i in c1:
-                    p *= i
-                       
-                f = 1
-                for i1 in e11:
-                    f *= i1
-                
-                f12 = p/f
-                
-                f1[a[ra5]] = f12
-                
-            if len(f1) == 2**len(d2['utility']['parents']):
-                for ij in f1:
-                    test1 = f1[ij]
-                    test2 = d2['utility']['prob1'][ij]
-                    
-                    test3 = test1*test2
-                    
-                    ij1.append(test3)
-                   
-            else:
-                for q2 in p12:
-                    if q2 in d2['utility']['parents']:
-                        a4 = e1[q2]
-                       
-                        k3 = d2['utility']['parents'].index(q2)
-                        
-                        for k4 in f1:
-                            k5 = copy.deepcopy(k4)
-                            k5 = list(k5)
-                            k5.insert(k3,a4)
-                            k5 = tuple(k5)
-                            f1[k5] = f1[k4]
-                            del f1[k4]
-                for ij in f1:
-                   
-                    
-                    ij1.append(float(f1[ij])*float(d2['utility']['prob1'][ij]))
-            sum1 = sum(ij1)
-            #print sum1
-            print int(round(sum1))
-           
-                      
-            #print f1
-
-        elif r[0] == 'M':
-            f1 = {}
-            ij1 = []
-            a = []
-            l44 = []
-            p44 = []
-            abc = []
-            abc1 = []
-            r32 = r.split('|')
-            #print 'here'
-            #print r32[0]
-            if '|' in r:
-                
-                #l42 = r32[0].index('(')
-                for l42 in range(len(r32[1])):
-                    if re.match("[A-Z]",r32[1][l42]):
-                        if r32[1][l42+4] == '+':
-                            e1[r32[1][l42]] = True
-                            
-                        else:
-                            e1[r32[1][l42]] = False
-
-            
-            l40 = r.index('(')
-            
-            for ry in range(l40+1,len(r32[0])):
-                #k8 = [True, False]
-                if re.match("[A-Z]",r[ry]):
-                    if r[ry+1] == ')' or r[ry+4] != '+':
-                        if r[ry+1] == ')' or r[ry+4] != '-':
-                            p44.append(r[ry])
-           
-            p441 = len(p44)
-            a7 = list(itertools.product([True,False], repeat=p441))
-            #print a7               
-            for k9 in range(len(a7)):
-                
-                f1 = {}
-                abc = []
-                for k10 in range(len(p44)):
-                    e1[p44[k10]] = bool(a7[k9][k10])
-                    
-                ij1 = []
-                
-                ra3 = len(o10)
-                for k1 in o10:
-                    if k1 in p12:
-                        ra3 = ra3 - 1
-                
-                                        
-                a = list(itertools.product([True,False], repeat=ra3))
-                
-                               
-                for ra5 in range(len(a)):
-                    #print a[ra5]
-                    c1 = []
-                    e11 = []
-                                        
-                    for ra1 in range(len(o10)):
-                        if o10[ra1] not in p12:
-                                                
-                            e[o10[ra1]] = bool(a[ra5][ra1])
-                                                
-                   # print e                         
-                    z = collections.OrderedDict()
-                    z = e.copy()
-                    z.update(e1)
-                    j1 = z.keys()
-                    j2 = z.values()
-                                                
-                    e5 = copy.deepcopy(e1)
-                    for j3 in j1:
-                                                  
-                        b1 = j1.index(j3)
-                        if j3 not in p12:
-                                
-                            del z[j3]
-                            
-                            c1.append(elim_ask(j3,z,j2[b1],p12))
-                                
-                                                    
-                    j4 = e5.keys()
-                    j5 = e5.values()
-                    for j6 in j4:
-                        b2 = j4.index(j6)
-                        if j6 not in p12:
-                                
-                            del e5[j6]
-                            e11.append(elim_ask(j6,e5,j5[b2],p12))
-                    
-                    p = 1
-                    for i in c1:
-                        p *= i
-                                               
-                    f = 1
-                    for i1 in e11:
-                        f *= i1
-                        
-                    f12 = p/f
-                        
-                    f1[a[ra5]] = f12
-               
-                if len(f1) == 2**len(d2['utility']['parents']):
-                    for ij in f1:
-                        #print 'problem'                    
-                        ij1.append(f1[ij]*d2['utility']['prob1'][ij])
-
-                else:
-                    for q2 in p12:
-                        if q2 in d2['utility']['parents']:
-                            a4 = e1[q2]
-                                
-                            k3 = d2['utility']['parents'].index(q2)
-                            #f1.insert(k3,a4)
-                            for k4 in f1:
-                                #print k4
-                                #k4 = list(k4)
-                                k5 = copy.deepcopy(k4)
-                                k5 = list(k5)
-                                k5.insert(k3,a4)
-                                k5 = tuple(k5)
-                                f1[k5] = f1[k4]
-                                del f1[k4]
-                    #print f1
-                    for ij in f1:
-                        
-                        ij1.append(f1[ij]*d2['utility']['prob1'][ij])
-                
-               
-                l44.append(sum(ij1))
-                
-                for h6 in p44:
-                    abc.append(e1[h6])
-                abc2 = copy.deepcopy(abc)
-                abc2 = tuple(abc2)
-                abc1.append(abc2)
-                
-            l8 = max(l44)
-            
-            l9 = l44.index(l8)
-            l8 = int(round(l8))
-            
-            for xyz in abc1[l9]:
-                if xyz == True:
-                    print '+',
-                else:
-                    print '-',
-            print l8
-
-def normal(l10):
-    
-    return tuple(x * 1/(sum(l10)) for x in l10)
-
-def query(Y,g):
-    
-    if d[Y]['prob'] != -2:
-        al = d1[Y]['prob'] if g[Y] else 1 - d1[Y]['prob']
+                continue
+    if player == 'X':
+        return xsum - osum
+    elif player == 'O':
+        return osum - xsum
     else:
-        
-        parent = tuple(g[p] for p in d1[Y]['parents'])
-        
-        al = d1[Y]['prob1'][parent] if g[Y] else 1 - d1[Y]['prob1'][parent]
-    return al
+        return 0
 
 
-def fourth(var, var2, e):
-    variables = var2[var]
-    variables.sort()
-    every = copy.deepcopy(d[var]['parents'])
-    every.append(var)
-    r0 = list(itertools.product([True,False], repeat=len(every)))
-    check = {}
-    tw = {}
-    for tw1 in r0:
-        check1 = False
-
-        for pair in zip(every, tw1): # tuples of ('var', value)
-        
+def available(b, player):
+    c = []
+    if player == 'X':
+        for i in range(8):
+            for j in range(8):
+                if b[i][j] == 'X':
+                    if i<7 and b[i+1][j] == 'O':
+                        for k in range(i+2,8):
+                        
+                            if b[k][j] == 'O':
+                                continue
+                            elif b[k][j] == 'X':
+                                break
+                            elif b[k][j] == '*':
+                                #c = c + [k,j]
+                                c.append([k,j])
+                                break
+                            
+                            else:
+                                pass
                     
-            if pair[0] in e and e[pair[0]] != pair[1]:
-                    check1 = True
-                    break
-            tw[pair[0]] = pair[1]
-        if check1:
-            continue
-        key = tuple(tw[v] for v in variables)
-        prob = query(var, tw)
-        #print prob
-        check[key] = prob
-    
-    return (variables, check)
 
-def multiply(factor1, factor2):
-       
-    th = []
-    th = th + factor1[0]
-    th = th + factor2[0]
-    th = list(set(th))
-    th.sort()
+                    if i>0 and b[i-1][j] == 'O':
+                        for k in range(i-2, -1, -1):
+                            if b[k][j] == 'O':
+                                continue
+                            elif b[k][j] == 'X':
+                                break
+                            elif b[k][j] == '*':
+                                c.append([k,j])
+                                #flip(k,i,j,j,'X')
+                                break
+                            else:
+                                pass
 
-    r0 = list(itertools.product([True,False], repeat=len(th)))
-    table = {}
-    tw = {}
-    for perm in r0:
-        
-        for pair in zip(th, perm):
-                
-            tw[pair[0]] = pair[1]
-        key = tuple(tw[v] for v in th)
-        key1 = tuple(tw[v] for v in factor1[0])
-        key2 = tuple(tw[v] for v in factor2[0])
-        prob = factor1[1][key1] * factor2[1][key2]
-        table[key] = prob
+                    if j<7 and b[i][j+1] == 'O':
+                        for k in range(j+2,8):
+                            if b[i][k] == 'O':
+                                continue
+                            elif b[i][k] == 'X':
+                                break
+                            elif b[i][k] == '*':
+                                c.append([i,k])
+                                #flip(i,i,j,k,'X')
+                                break
+                            elif b[i][7] == 'O':
+                                break
+                            else:
+                                pass
 
-    return (th, table)
+                    if j>0 and b[i][j-1] == 'O':
+                        for k in range(j-2,-1,-1):
+                            if b[i][k] == 'O':
+                                continue
+                            elif b[i][k] ==  'X':
+                                break
+                            elif b[i][k] == '*':
+                                c.append([i,k])
+                                #flip(i,i,k,j,'X')
+                                break
+                            else:
+                                pass
+                        
 
+                    if i<0 and j<7 and b[i-1][j+1] == 'O':
+                        k = i - 2
+                        l = j + 2
+                        while k > -1 and l < 8:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l + 1
 
-def third(var, factors):
-  
-    seven = []  
-    eight = []
-    for i in range(len(factors)):
-    
-        if var in factors[i][0]:
-            seven.append(factors[i])
-            eight.append(i)
-    if len(seven) > 1:
-        #newlist = oldlist[::-1]
-        for i in eight[::-1]:
-            del factors[i]
-        result = seven[0]
-        for factor in seven[1:]:
-            result = multiply(result, factor)
-        factors.append(result)
-    for i in range(len(factors)):
-    
-        for j, v in enumerate(factors[i][0]):
+                    if i< 7 and j<7 and b[i+1][j+1] == 'O':
+                        k = i + 2
+                        l = j + 2
+                        while k < 8 and l < 8:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l + 1
+
+                    if i<7 and j>0 and b[i+1][j-1] == 'O':
+                        k = i + 2
+                        l = j - 2
+                        while k < 8 and l > -1:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l - 1
+
+                    if i>0 and j>0 and b[i-1][j-1] == 'O':
+                        k = i - 2
+                        l = j - 2
+                        while k > -1 and l > -1:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l - 1
+
+    if player == 'O':
+        for i in range(8):
+            for j in range(8):
+
+                if b[i][j] == 'O':
+                    if i<7 and b[i+1][j] == 'X':
+                        for k in range(i+2,8):
+                        
+                            if b[k][j] == 'X':
+                                continue
+                            elif b[k][j] == 'O':
+                                break
+                            elif b[k][j] == '*':
+                                
+                                c.append([k,j])
+                                #flip(i,k,j,j,'O')
+                                break
+                            elif b[7][j] == 'X':
+                                break
+                            else:
+                                pass
+                         
+                    if i>0 and b[i-1][j] == 'X':
+                        for k in range(i-2, -1, -1):
+                            if b[k][j] == 'X':
+                                continue
+                            elif b[k][j] == 'O':
+                                break
+                            elif b[k][j] == '*':
+                                c.append([k,j])
+                                #flip(k,i,j,j,'O')
+                                break
+                            else:
+                                pass
+
+                    if i>0 and b[i-1][j] == 'X':
+                        for k in range(i-2, -1, -1):
+                            if b[k][j] == 'X':
+                                continue
+                            elif b[k][j] == 'O':
+                                break
+                            elif b[k][j] == '*':
+                                c.append([k,j])
+                                #flip(i,i,j,k,'O')
+                                break
+                            else:
+                                pass
+
+                    if j<7 and b[i][j+1] == 'X':
+                        for k in range(j+2,8):
+                            if b[i][k] == 'X':
+                                continue
+                            elif b[i][k] == 'O':
+                                break
+                            elif b[i][k] == '*':
+                                c.append([i,k])
+                                #flip(i,i,k,j,'O')
+                                break
+                            else:
+                                pass
+
+                    if j>0 and b[i][j-1] == 'X':
+                        for k in range(j-2,-1,-1):
+                            if b[i][k] == 'X':
+                                continue
+                            elif b[i][k] ==  'O':
+                                break
+                            elif b[i][k] == '*':
+                                c.append([i,k])
+                                #flip(i,k,j,l,'O')
+                                break
+                            else:
+                                pass
+                        
+
+                    if i>0 and j<7 and b[i-1][j+1] == 'X':
+                        k = i - 2
+                        l = j + 2
+                        while k > -1 and l < 8:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'O')
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l + 1
+
+                    if i<7 and j<7 and b[i+1][j+1] == 'X':
+                        k = i + 2
+                        l = j + 2
+                        while k < 8 and l < 8:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'O')
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l + 1
+
+                    if i<7 and j>0 and b[i+1][j-1] == 'X':
+                        k = i + 2
+                        l = j - 2
+                        while k < 8 and l > -1:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'O')
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l - 1
+
+                    if i>0 and j>0 and b[i-1][j-1] == 'X':
+                        k = i - 2
+                        l = j - 2
+                        while k > -1 and l > -1:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif b[k][l] == '*':
+                                c.append([k,l])
+                                #flip(i,k,j,l,'O')
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l - 1
               
-            if v == var:
-                ten = factors[i][0][:j] + factors[i][0][j+1:]
-                eleven = {}
-                for nine in factors[i][1]:
-                    nine = list(nine)
-                    tw = tuple(nine[:j] + nine[j+1:])
+    return sorted(c)
 
-                    nine[j] = True
-                    oone = factors[i][1][tuple(nine)]
-                    nine[j] = False
-                    ttwo = factors[i][1][tuple(nine)]
-                    prob = oone + ttwo
-                            
-                    eleven[tw] = prob
-
+def flip(b, m, n, player):
+    if player == 'X':
+        for i in range(8):
+            for j in range(8):
+                if b[i][j] == 'X':
+                    if i<7 and b[i+1][j] == 'O':
+                        for k in range(i+2,8):
                         
-                factors[i] = (ten, eleven)
-                if len(ten) == 0:
-                    del factors[i]
-    return factors
+                            if b[k][j] == 'O':
+                                continue
+                            elif b[k][j] == 'X':
+                                break
+                            elif k == m and j == n:
+                                for h in range(i,k+1):
+                                    b[h][j] = 'X'
+                                break
+                            elif b[7][j] == 'O':
+                                break
+                            
+                            else:
+                                pass
+                    
 
+                    if i>0 and b[i-1][j] == 'O':
+                        for k in range(i-2, -1, -1):
+                            if b[k][j] == 'O':
+                                continue
+                            elif b[k][j] == 'X':
+                                break
+                            elif k == m and j == n:
+                                for h1 in range(i,k-1,-1):
+                                    b[h1][j] = 'X'
+                                break
+                            else:
+                                pass
 
-def elim_ask(X, e,value,p12):
+                    if j<7 and b[i][j+1] == 'O':
+                        for k in range(j+2,8):
+                            if b[i][k] == 'O':
+                                continue
+                            elif b[i][k] == 'X':
+                                break
+                            elif i == m and k == n:
+                                for h2 in range(j,k+1):
+                                    b[i][h2] = 'X'
+                                break
+                            else:
+                                pass
+
+                    if j>0 and b[i][j-1] == 'O':
+                        for k in range(j-2,-1,-1):
+                            if b[i][k] == 'O':
+                                continue
+                            elif b[i][k] ==  'X':
+                                break
+                            elif i == m and k == n:
+                                for h3 in range(j,k-1,-1):
+                                    b[i][h3] = 'X'
+                                break
+                            else:
+                                pass
+                        
+
+                    if i>0 and j<7 and b[i-1][j+1] == 'O':
+                        k = i - 2
+                        l = j + 2
+                        while k > -1 and l < 8:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif k == m and l == n:
+                                
+                                while i>=k and j<=l:
+                                    b[k][l] = 'X'
+                                    k = k + 1
+                                    l = l - 1
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l + 1
+
+                    if i<7 and j<7 and b[i+1][j+1] == 'O':
+                        k = i + 2
+                        l = j + 2
+                        while k < 8 and l < 8:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif k == m and l == n:
+                                while i<=k and j<=l:
+                                    b[k][l] = 'X'
+                                    k = k - 1
+                                    l = l - 1
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l + 1
+
+                    if i<7 and j>0 and b[i+1][j-1] == 'O':
+                        k = i + 2
+                        l = j - 2
+                        while k < 8 and l > -1:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif k == m and l == n:
+                                while i<=k and j>=l:
+                                    b[k][l] = 'X'
+                                    k = k - 1
+                                    l = l + 1
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l - 1
+
+                    if i>0 and j>0 and b[i-1][j-1] == 'O':
+                        k = i - 2
+                        l = j - 2
+                        while k > -1 and l > -1:
+                            if b[k][l] == 'O':
+                                pass
+                            elif b[k][l] == 'X':
+                                break
+                            elif k == m and l == n:
+                                while i>=k and j>=l:
+                                    b[k][l] = 'X'
+                                    k = k + 1
+                                    l = l + 1
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l - 1
+    if player == 'O':
+        for i in range(8):
+            for j in range(8):
+                if b[i][j] == 'O':
+                    if b[i+1][j] == 'X':
+                        for k in range(i+2,8):
+                        
+                            if b[k][j] == 'X':
+                                continue
+                            elif b[k][j] == 'O':
+                                break
+                            elif k == m and j == n:
+                                for h in range(i,k+1):
+                                    b[h][j] = 'O'
+                                break
+                            elif b[7][j] == 'X':
+                                break
+                            
+                            else:
+                                pass
+                    
+
+                    if b[i-1][j] == 'X':
+                        for k in range(i-2, -1, -1):
+                            if b[k][j] == 'X':
+                                continue
+                            elif b[k][j] == 'O':
+                                break
+                            elif k == m and j == n:
+                                for h1 in range(i,k-1,-1):
+                                    b[h1][j] = 'O'
+                                #c.append([k,j])
+                                #flip(k,i,j,j,'X')
+                                break
+                            else:
+                                pass
+
+                    if b[i][j+1] == 'X':
+                        for k in range(j+2,8):
+                            if b[i][k] == 'X':
+                                continue
+                            elif b[i][k] == 'O':
+                                break
+                            elif i == m and k == n:
+                                for h2 in range(j,k+1):
+                                    b[i][h2] = 'O'
+                                #c.append([i,k])
+                                #flip(i,i,j,k,'X')
+                                break
+                            else:
+                                pass
+
+                    if b[i][j-1] == 'X':
+                        for k in range(j-2,-1,-1):
+                            if b[i][k] == 'X':
+                                continue
+                            elif b[i][k] ==  'O':
+                                break
+                            elif i == m and k == n:
+                                for h3 in range(j,k-1,-1):
+                                    b[i][h3] = 'O'
+                                #c.append([i,k])
+                                #flip(i,i,k,j,'X')
+                                break
+                            else:
+                                pass
+                        
+
+                    if b[i-1][j+1] == 'X':
+                        k = i - 2
+                        l = j + 2
+                        while k > -1 and l < 8:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif k == m and l == n:
+                                
+                                while i>=k and j<=l:
+                                    b[k][l] = 'O'
+                                    k = k + 1
+                                    l = l - 1
+                                #c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l + 1
+
+                    if b[i+1][j+1] == 'X':
+                        k = i + 2
+                        l = j + 2
+                        while k < 8 and l < 8:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif k == m and l == n:
+                                while i<=k and j<=l:
+                                    b[k][l] = 'O'
+                                    k = k - 1
+                                    l = l - 1
+                                #c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l + 1
+
+                    if b[i+1][j-1] == 'X':
+                        k = i + 2
+                        l = j - 2
+                        while k < 8 and l > -1:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif k == m and l == n:
+                                while i<=k and j>=l:
+                                    b[k][l] = 'O'
+                                    k = k - 1
+                                    l = l + 1
+                                #c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k + 1
+                            l = l - 1
+
+                    if b[i-1][j-1] == 'X':
+                        k = i - 2
+                        l = j - 2
+                        while k > -1 and l > -1:
+                            if b[k][l] == 'X':
+                                pass
+                            elif b[k][l] == 'O':
+                                break
+                            elif k == m and l == n:
+                                while i>=k and j>=l:
+                                    b[k][l] = 'O'
+                                    k = k + 1
+                                    l = l + 1
+                                #c.append([k,l])
+                                #flip(i,k,j,l,'X')
+                                break
+                            else:
+                                pass
+                            k = k - 1
+                            l = l - 1
+              
+    return b
+
+def infinity(a):
+    if a == float("inf"):
+        return "Infinity"
+    elif a == float("-inf"):
+        return "-Infinity"
+    else:
+        return a
+
+def abc(m,n):
+    m = m + 1
+    n = chr(97 + n)
+    return n + str(m)
+
+def alphabeta(b, player, dep, level, alpha, beta, pass1, m1, n1):
     
-    second = set()
-    five = []
-
-    while len(second) < len(d):
-        
-        var2 = [v for v in list(d.keys()) if v not in second]
-        
-        var2 = [v for v in var2 if all(c in second for c in d[v]['children'])]
-        
-        vars1 = {}
-        for v in var2:
-            vars1[v] = [p for p in d[v]['parents'] if p not in e ]
-            if v not in e:
-                vars1[v].append(v)
-        
-        one = sorted(vars1.keys(), key=(lambda x: (len(vars1[x]), x)))[0]
-        if len(vars1[one]) > 0:
-            five.append(fourth(one,vars1, e))
+    v = available(b,player)
             
-        if one != X and one not in e:
-            five = third(one, five)
-       
-        second.add(one)
-            
-        for factor in five:
-            two = {}
-            
-            r0 = list(itertools.product([True,False], repeat=len(factor[0])))
-            for six in r0:
-                for three in factor[0]:
-                    for four in six:
-                        
-                            two[three] = four
-                key = tuple(two[v] for v in factor[0])
-
-    if len(five) >= 2:
-            result = five[0]
-            for factor in five[1:]:
-                result = multiply(result, factor)
+    if player == current:
+        bestValue = float("-inf")
     else:
-       
-        result = five[0]
-    value1 = normal((result[1][(False,)], result[1][(True,)]))
-    if value == True:
-       
-        return value1[1]
-    else:
-        
-        return value1[0]
+        bestValue = float("+inf")
+    
 
-hello(c,p12)
-                            
+    if int(level) == int(dep) or (len(v) ==  0):
+        bestValue = evaluation(b, change(player))
+       
+        return bestValue
+    
+            
+    else:
+        for i in range(len(v)):
+            
+            tempb = copy.deepcopy(b)
+            
+            m = v[i][0]
+            n = v[i][1]
+           
+            z = flip(tempb,m,n,player)
+            
+            if player == current:
+                
+                newValue = alphabeta(z,change(current),dep,level+1,alpha,beta,pass1,m,n)
+               
+                if newValue > bestValue:
+                    bestValue = newValue
+                    m1 = m
+                    n1 = n
+                    
+                    
+                if newValue >= beta:
+                    
+                    return newValue
+                if newValue > alpha:
+                    alpha = newValue
+                    m1 = m
+                    n1 = n
+                    
+            elif player == other:
+                newValue = alphabeta(z,change(other),dep,level+1,alpha,beta, pass1,m,n)[0]
+                
+                if newValue < bestValue:
+                    bestValue = newValue
+                    m1 = m
+                    n1 = n
+                    
+            
+                if newValue <= alpha:
+                  
+                    return newValue,t
+                if newValue < beta:
+                    beta = newValue
+                    m1 = m
+                    n1 = n
+                    
+        return bestValue, m1, n1
+
+def final(b):
+    for i in range(8):
+        for j in range(8):
+            sys.stdout.write(b[i][j])
+        print '\r'
+    
+    print '\r'
+'''
+def final1(b):
+    for i in range(len(b)):
+        sys.stdout.write(b[i])
+        if i<(len(b)-1):
+            print '\r'
+
+'''
+
+z1 = alphabeta(b,player,dep,0,float("-inf"),float("inf"), 0,0,0)
+if len(available(b,player)) != 0:
+    z2 = z1[1]
+    z4 = z1[2]
+    #z5 = z1[3]
+    z3 = flip(b,z2,z4,player)
+    final(z3)
+    #final1(z5)
+else:
+    #z6 = z1[1]
+    final(b)
+    #final1(z6)
+
+
+
+
+
+
+        
+    

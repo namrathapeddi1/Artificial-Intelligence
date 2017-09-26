@@ -1,0 +1,464 @@
+import copy
+import random
+import sys
+from random import randrange
+f = open('input1.txt', 'r')
+people =  f.readline().strip()
+p1 = people.split()
+p = int(p1[0])
+t = int(p1[1])
+b = []
+g2 = []
+g10 = []
+n = []
+n1 = []
+d = [[0]*p for _ in range(p)]
+for line in f:
+    line = line.rstrip()
+    b.append( list(line) )
+f  = open("output.txt",'w')
+sys.stdout = f
+for i in range(len(b)):
+    a = int(b[i][0])
+    c = int(b[i][2])
+    if b[i][4] == 'F':
+        
+        d[a-1][c-1] = 1
+    elif b[i][4] == 'E':
+        d[a-1][c-1] = -1
+        
+for i in range(len(d)):
+    for j in range(len(d)):
+        if d[i][j] == -1:
+            for k in range(t):
+                #used lists
+                g2.append(['~x' + str(i+1) + '.' + str(k+1),'~x' + str(j+1) + '.' + str(k+1)])
+        if d[i][j] == 1:
+            if t > 1:
+                for h in range(t):
+                    for l in range(t):
+                        if h != l:
+                            g2.append(['~x' + str(i+1) + '.' + str(h+1),'~x' + str(j+1) + '.' + str(l+1)])
+
+for j in range(t):
+    for k in range(j+1,t):
+        for i in range(p):
+            #list
+            g2.append(['~x' + str(i+1) + '.' + str(k+1),'~x' + str(i+1) + '.' + str(j+1)])
+
+for i in range(p):
+    for j in range(t):
+        n.append('x' + str(i+1) + '.' + str(j+1))
+    g2.append(n)
+    n = []
+
+for i7 in range(len(d)):
+    for j7 in range(len(d)):
+        if d[i7][j7] == -1:
+            for k7 in range(t):
+                #used lists
+                g10.append([['~','x',i7+1,k7+1],['~','x',j7+1,k7+1]])
+        if d[i7][j7] == 1:
+            if t > 1:
+                for h17 in range(t):
+                    for l17 in range(t):
+                        if h17 != l17:
+                            g10.append([['~','x',i7+1,h17+1],['~','x',j7+1,l17+1]])
+
+if t > 1:
+    for j7 in range(t):
+        for k7 in range(j7+1,t):
+            for i7 in range(p):
+               
+                g10.append([['~','x',i7+1,k7+1],['~','x',i7+1,j7+1]])
+
+    for i7 in range(p):
+        for j7 in range(t):
+            n1.append(['x',i7+1,j7+1])
+        g10.append(n1)
+        n1 = []
+g4 = copy.deepcopy(g10)
+
+
+def make_symbols(clauses):
+    symbols = []
+    for i in clauses:
+        for j in i:
+            if j[0] != '~':
+                if j not in symbols:
+                    symbols.append(j)
+    return symbols
+def delete(symbols,P):
+    symbols1 = []
+    
+    #return symbols
+    #return [value for value in symbols if value != P]
+    for a in symbols:
+        if a != P:
+            symbols1.append(a)
+    return symbols1
+                
+       
+def valid(clause,model = {}):
+    count = 0
+    for i in range(len(clause)):
+        pos = 0
+        if model.get(clause[i]) == True:
+            return True
+        elif model.get(clause[i]) == False:
+            count = count + 1
+        elif clause[i][0] == '~':
+            pos = clause[i].index('.')
+            a = clause[i][2:pos]
+            b = clause[i][pos+1:]
+            c = 'x' + str(a) + '.' + str(b)
+            if c in model:
+                if model.get(c) == False:
+                    return True
+                elif model.get(c) == True:
+                    count = count + 1
+    if count == len(clause):
+        return False
+    else:
+        return None
+
+def pure(symbols,nt):
+    temp = 0
+    temp1 = 0
+    for each in symbols:
+        for each1 in nt:
+            if each in each1:
+                temp = temp +  1
+            d = '~' + each
+            if d in each1:
+                temp1 = temp1 + 1
+        if temp > 0 and temp1 > 0:
+            return None, None
+        elif temp > 0 and temp1 == 0:
+            return each, True
+        elif temp == 0 and temp1 > 0:
+            return each, False
+        else:
+            return None, None
+        
+def unit(clauses,model):
+    for one in clauses:
+        count2 = 0
+        for two in one:
+            pos1 = 0
+            if two[0] == '~':
+                pos1 = two.index('.')
+                e = two[2:pos1]
+                f = two[pos1+1:]
+                g = 'x' + str(e) + '.' + str(f)
+                g1 = g
+                value = False
+            else:
+                g1 = two
+                value = True
+            if g1 not in model:
+                P, value = g1,value
+                count2 = count2 + 1
+        if count2 == 1:
+            return P, value
+    return None, None
+
+def extra(model,lit,val):
+    #model1 = model.copy()
+    model[lit] = val
+    return model
+
+def DPLL(clauses,symbols,model):
+    nt = []
+    for element in clauses:
+        ele = valid(element,model)
+        if ele == False:
+            return False
+        if ele != True:
+            nt.append(element)
+    if not nt:
+        
+        return True
+    P, value = pure(symbols,nt)
+    model1 = model.copy()
+    if P:
+       
+        return DPLL(clauses,delete(symbols,P),extra(model1,P,value))
+    
+    P, value = unit(nt,model)
+    model2 = model.copy()
+    if P:
+        return DPLL(clauses, delete(symbols,P), extra(model2,P,value))
+    P = symbols.pop()
+    
+    return (DPLL(clauses,symbols,extra(model,P,True)) or DPLL(clauses,symbols,extra(model,P,False)))
+
+def DPLL_s(g2):
+    if p == 0 or t == 0:
+        return False
+    clauses = copy.deepcopy(g2)
+    symbols = make_symbols(clauses)
+    return DPLL(clauses,symbols,{})
+    
+
+
+
+g1 = DPLL_s(g2)
+if g1 == True:
+    print 'yes'
+
+else:
+    print 'no'
+
+def model(g10):
+    
+    h1 = []
+    j1 = []
+    for i in g10:
+        for j in i:
+            if j not in h1:
+                h1.append(j)
+
+    for b in h1:
+        l = bool(random.getrandbits(1))
+        j1.append(l)
+
+    #print j1
+    for k in range(len(h1)):
+        for a in range(k+1,len(h1)):
+            if k != a:
+                if h1[k][0] == '~' and h1[a][0] !='~':
+                    if h1[k][2] == h1[a][1]:
+                        if h1[k][3] == h1[a][2]:
+                            #print h1[k],h1[a]
+                            if j1[k] == False:
+                                if j1[a] == False:
+                                    j1[a] = True
+                               
+                            elif j1[k] == True:
+                                if j1[a] == True:
+                                    j1[a] = False
+
+    for i1 in range(len(g10)): #CNF is g10
+        for i3 in range(len(g10[i1])):
+            for i2 in range(len(h1)):
+                
+                if g10[i1][i3] == h1[i2]:
+                    
+                    g4[i1][i3] = j1[i2]
+                    
+                    break
+    return g4
+
+def walkSat(g10,v6,maxFlips):
+    g3 = model(g10)
+   
+    for i in range(maxFlips):
+        flag = 0
+        
+        g5 = []
+        g9 = []
+        for j in g3:
+            flag2 = 0
+            for k in j:
+                if k == True:
+                    flag2 = 1
+                    #g5.append(True)
+                    #break
+            if flag2 == 1:
+                g5.append(True)
+            elif flag2 != 1:
+                g5.append(False)
+            
+                
+          
+        for p in g5:
+            if p == False:
+                #print p
+                flag = 1
+                break
+        
+        if flag == 0:
+            
+            return g3
+           
+        elif flag != 0:
+              
+                  
+            
+            index = randrange(0,len(g5))
+            while g5[index] != False:
+                
+                index = randrange(0,len(g5))
+                
+            d1 = random.uniform(0, 1)
+            
+            z5 = {}
+            if d1 < v6:
+               # print 'first'
+                g6 = g2[index]
+               
+                index1 = randrange(0,len(g6))
+                
+                if g3[index][index1] == False:
+                    g3[index][index1] = True
+                    for h3 in range(len(g2)):
+                        for h4 in range(len(g10[h3])):
+                            if g10[h3][h4] == g10[index][index1]:
+                                g3[h3][h4] = True
+                    
+                    #print 'g3'
+                    #print g3[index][index1]
+                elif g3[index][index1] == True:
+                    g3[index][index1] = False
+                    for h5 in range(len(g2)):
+                        for h6 in range(len(g10[h5])):
+                            if g10[h5][h6] == g10[index][index1]:
+                                g3[h5][h6] = False
+
+                for h7 in range(len(g10)):
+                    for h8 in range(len(g10[h7])):
+                        if g10[index][index1][0] == '~':
+                            if g10[h7][h8][0] != '~':
+                                if g10[h7][h8][1] == g10[index][index1][2]:
+                                    if g10[h7][h8][2] == g10[index][index1][3]:
+                                        if g3[index][index1] == False:
+                                            g3[h7][h8] = True
+                                        elif g3[index][index1] == True:
+                                            g3[h7][h8] = False
+                        elif g10[index][index1][0] != '~':
+                            if g10[h7][h8][0] == '~':
+                                if g10[h7][h8][2] == g10[index][index1][1]:
+                                    if g10[h7][h8][3] == g10[index][index1][2]:
+                                        if g3[index][index1] == False:
+                                            g3[h7][h8] = True
+                                        elif g3[index][index1] == True:
+                                            g3[h7][h8] = False
+                   
+            
+            elif d1 > v6:
+                #print 'second'
+                #count = 0
+                for index2 in range(len(g3[index])):
+                    g9 = []
+                    count = 0
+                    #print index2,index
+                    g8 = copy.deepcopy(g3)
+                    #print g8
+                    if g8[index][index2] == False:
+                        g8[index][index2] = True
+                        for l1 in range(len(g10)):
+                            for l2 in range(len(g10[l1])):
+                                if g10[l1][l2] == g10[index][index2]:
+                                    g8[l1][l2] = True
+                    
+                    #print 'g3'
+                    #print g3[index][index1]
+                    elif g8[index][index2] == True:
+                        g8[index][index2] = False
+                        for l3 in range(len(g10)):
+                            for l4 in range(len(g10[l3])):
+                                if g10[l3][l4] == g10[index][index2]:
+                                    g8[l3][l4] = False
+
+                    for l5 in range(len(g10)):
+                        for l6 in range(len(g2[l5])):
+                            if g10[index][index2][0] == '~':
+                                if g10[l5][l6][0] != '~':
+                                    if g10[l5][l6][1] == g10[index][index2][2]:
+                                        if g10[l5][l6][2] == g10[index][index2][3]:
+                                            if g8[index][index2] == False:
+                                                g8[l5][l6] = True
+                                            elif g8[index][index2] == True:
+                                                g3[l5][l6] = False
+                            elif g10[index][index2][0] != '~':
+                                if g10[l5][l6][0] == '~':
+                                    if g10[l5][l6][2] == g10[index][index2][1]:
+                                        if g10[l5][l6][3] == g10[index][index2][2]:
+                                            if g8[index][index2] == False:
+                                                g8[l5][l6] = True
+                                            elif g8[index][index2] == True:
+                                                g8[l5][l6] = False
+
+                    for j4 in g8:
+                        flag3 = 0
+                        for k3 in j4:
+                            if k3 == True:
+                                flag3 = 1
+                                #g5.append(True)
+                                #break
+                        if flag3 == 1:
+                            g9.append(True)
+                        elif flag3 != 1:
+                            g9.append(False)
+
+                    for z0 in g9:
+                        if z0 == True:
+                            count = count + 1
+                    z5[index2] = count
+                    
+                
+                max_key = max(z5, key=lambda k: z5[k])
+
+                if g3[index][max_key] == False:
+                    g3[index][max_key] = True
+                    for h3 in range(len(g2)):
+                        for h4 in range(len(g2[h3])):
+                            if g10[h3][h4] == g10[index][max_key]:
+                                g3[h3][h4] = True
+                        
+                       
+                elif g3[index][max_key] == True:
+                    g3[index][max_key] = False
+                    for h5 in range(len(g10)):
+                        for h6 in range(len(g2[h5])):
+                            if g10[h5][h6] == g10[index][max_key]:
+                                g3[h5][h6] = False
+
+                for h7 in range(len(g10)):
+                    for h8 in range(len(g10[h7])):
+                        if g10[index][max_key][0] == '~':
+                            if g10[h7][h8][0] != '~':
+                                if g10[h7][h8][1] == g10[index][max_key][2]:
+                                    if g10[h7][h8][2] == g10[index][max_key][3]:
+                                        if g3[index][max_key] == False:
+                                            g3[h7][h8] = True
+                                        elif g3[index][max_key] == True:
+                                            g3[h7][h8] = False
+                        elif g10[index][max_key][0] != '~':
+                            if g10[h7][h8][0] == '~':
+                                if g10[h7][h8][2] == g10[index][max_key][1]:
+                                    if g10[h7][h8][3] == g10[index][max_key][2]:
+                                        if g3[index][max_key] == False:
+                                            g3[h7][h8] = True
+                                        elif g3[index][max_key] == True:
+                                            g3[h7][h8] = False
+
+
+                    
+
+                    
+                    
+    return 0
+            
+if g1 == True:
+    if g10 == []:
+        for z1 in range(p):
+            print z1+1,1
+
+    else:
+       
+        g3 = walkSat(g10,0.5,1000)
+       
+        if g3 == 0:
+            print 'failure'
+        else:
+            for u in range(len(g10)):
+                    for t in range(len(g10[u])):
+                            
+                        if g10[u][t][0] != '~':
+                            if g3[u][t] == True:
+                                print g10[u][t][1], g10[u][t][2]
+                                break
+
+      
